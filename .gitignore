@@ -1,0 +1,6 @@
+# 方案 A：不提交原始会话记录
+.claude/sessions/
+*.jsonl
+
+# Claude Code 本机设置（如需要共享，改提交 .claude/settings.json）
+.claude/settings.local.json
