@@ -22,7 +22,7 @@ try {
         exit 0
     }
 
-    git add -A
+    git add -- CLAUDE.md HANDOFF.md .gitignore 短剧项目 scripts "AI视频制作学习计划.md" "重生后我退了婚约才知道暗恋我十年的人一直在等我.txt"
     $staged = git diff --cached --name-only
     if (-not $staged) {
         Write-Log '无可提交改动，跳过'
