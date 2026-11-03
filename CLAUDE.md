@@ -32,24 +32,23 @@
 - 所有分镜按五律；每个镜头过三问：讲什么、删了怎样、AI 拍不拍得出来
 - 中文输出
 
-## Git 提交规则（每次会话结束必做）
+## Git 提交规则（每天 18:00 后提交一次）
 
-采用方案 A：**每次会话结束前，把项目文件提交并推送到远程仓库**。
+不按会话提交，改为**每天 18 点后提交并推送一次**。
 
-1. 先 `git status --short` 确认改动范围，只提交本项目的文件；
-2. 正常提交：`CLAUDE.md`、`HANDOFF.md`、`短剧项目/`、教材与原著；
-3. **不要提交**原始会话 JSONL，也不要提交 `.claude/sessions/`（已在 `.gitignore` 中排除）；
-4. 提交信息用中文，写清本次会话完成了什么；
-5. 推送到 `origin main`；无改动则跳过，不制造空提交。
+- **自动方式**：Windows 计划任务 `DramaDailyGitCommit` 每天 18:07 调用 `scripts/daily-commit.ps1`，有改动才 commit + push，无改动跳过；
+- **手动方式**：18:00 后如果还在会话中，结束前手动执行一次同样的提交；
+- 只提交本项目文件；**不要提交**原始会话 JSONL（`.claude/sessions/`、`*.jsonl` 已在 `.gitignore` 中排除）；
+- 提交信息格式：`每日自动提交 YYYY-MM-DD HH:mm`；
+- 无改动不制造空提交；
+- 推送失败不要强推；先 `git pull --rebase origin main`，解决冲突后再推送，并在回复里说明。
 
 命令模板：
 
 ```powershell
 cd D:\学习\drama
-git add CLAUDE.md HANDOFF.md 短剧项目 .gitignore
+git add -A
 git status --short
-git commit -m "本次会话：<一句话说明>"
+git commit -m "每日自动提交 $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 git push origin main
 ```
-
-如果远程推送失败（网络、认证、冲突），不要强推；先 `git pull --rebase origin main`，解决冲突后再推送，并在回复里说明情况。
