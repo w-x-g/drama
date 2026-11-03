@@ -17,30 +17,40 @@ try {
     Set-Location $repo
 
     $status = git status --porcelain
-    if (-not $status) {
-        Write-Log '无改动，跳过提交'
-        exit 0
+    if ($status) {
+        git add -- CLAUDE.md HANDOFF.md .gitignore 短剧项目 scripts "AI视频制作学习计划.md" "重生后我退了婚约才知道暗恋我十年的人一直在等我.txt"
+        $staged = git diff --cached --name-only
+        if ($staged) {
+            $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
+            $message = "每日自动提交 $stamp`n`nCo-Authored-By: Claude Code <noreply@anthropic.com>"
+            $msgFile = Join-Path $env:TEMP 'drama-daily-commit-msg.txt'
+            [System.IO.File]::WriteAllText($msgFile, $message, (New-Object System.Text.UTF8Encoding($false)))
+
+            git commit -F $msgFile
+            if ($LASTEXITCODE -ne 0) { throw "git commit 失败，退出码 $LASTEXITCODE" }
+            Write-Log "提交成功：$stamp"
+        }
+        else {
+            Write-Log '工作区有改动，但没有可提交的项目文件'
+        }
+    }
+    else {
+        Write-Log '工作区无改动'
     }
 
-    git add -- CLAUDE.md HANDOFF.md .gitignore 短剧项目 scripts "AI视频制作学习计划.md" "重生后我退了婚约才知道暗恋我十年的人一直在等我.txt"
-    $staged = git diff --cached --name-only
-    if (-not $staged) {
-        Write-Log '无可提交改动，跳过'
-        exit 0
+    # 工作区干净时也要补推：处理上次网络失败留下的未推送提交
+    $ahead = git rev-list --count origin/main..HEAD
+    if ($LASTEXITCODE -ne 0) { $ahead = '0' }
+
+    if ([int]$ahead -gt 0) {
+        git push origin main
+        if ($LASTEXITCODE -ne 0) { throw "git push 失败，退出码 $LASTEXITCODE" }
+        Write-Log "推送成功：领先 origin/main $ahead 个提交"
+    }
+    else {
+        Write-Log '无需推送'
     }
 
-    $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
-    $message = "每日自动提交 $stamp`n`nCo-Authored-By: Claude Code <noreply@anthropic.com>"
-    $msgFile = Join-Path $env:TEMP 'drama-daily-commit-msg.txt'
-    [System.IO.File]::WriteAllText($msgFile, $message, (New-Object System.Text.UTF8Encoding($false)))
-
-    git commit -F $msgFile
-    if ($LASTEXITCODE -ne 0) { throw "git commit 失败，退出码 $LASTEXITCODE" }
-
-    git push origin main
-    if ($LASTEXITCODE -ne 0) { throw "git push 失败，退出码 $LASTEXITCODE" }
-
-    Write-Log "提交并推送成功：$stamp"
     exit 0
 }
 catch {
