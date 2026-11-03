@@ -23,7 +23,7 @@
 | 教学方式 | 分阶段实战，每课一个交付物，验收 70 分才进下一课 |
 | 项目代号 | 梨花误 |
 | 第 1 集范围 | 第 1–3 章：临终 → 重生 → 拒婚 → 写信给裴珩 |
-| 上下文同步 | 方案 A：项目文件入库，每次会话结束自动 commit + push；不提交原始会话 JSONL |
+| 上下文同步 | 方案 A：项目文件入库；每天 18:07 由 Windows 计划任务 `DramaDailyGitCommit` 自动 commit + push；不提交原始会话 JSONL |
 
 ## 三、当前进度
 
@@ -51,6 +51,12 @@ Claude 会读取 `CLAUDE.md`、本文件和 `短剧项目/`，恢复上下文。
 - `CLAUDE.md`：项目规则与当前进度，Claude 每次进入仓库自动加载；
 - `HANDOFF.md`：本文件，决策与交接；
 - `短剧项目/`：所有课程交付物。
+
+本机已注册 Windows 计划任务 `DramaDailyGitCommit`：每天 18:07 运行 `scripts/daily-commit.ps1`，有改动才提交并推送；日志在 `%LOCALAPPDATA%\DramaDailyCommit\commit.log`。删除任务：
+
+```powershell
+Unregister-ScheduledTask -TaskName 'DramaDailyGitCommit' -Confirm:$false
+```
 
 操作：
 
