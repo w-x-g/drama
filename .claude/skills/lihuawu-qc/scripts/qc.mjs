@@ -54,8 +54,8 @@ const motionText = read(files.motion);
 const visual = read(files.visual);
 
 const findings = [];
-function check(id, ok, detail) {
-  findings.push({ id, ok, detail });
+function check(id, ok, detail, level) {
+  findings.push({ id, ok, detail, level: level || (ok ? 'pass' : 'fail') });
 }
 
 // ---------- 解析分镜 ----------
@@ -185,32 +185,52 @@ for (const line of visual.split('\n')) {
   const m = line.match(/连续性锁[：:]\s*(LOCK-[A-Za-z0-9-]+).*?图片提示词项[：:]\s*(IMG-[A-Za-z0-9-]+).*?锁面[：:]\s*(.+)$/);
   if (m) locks.push({ id: m[1], img: m[2], surface: m[3].trim() });
 }
-const lockProblems = [];
+// 同一张资产板可能含多套造型，单镜只穿其中一套：
+// 锁面一次都没出现 = 失败；部分镜头出现 = 通过但告警（列出未覆盖镜号）。
+const lockFailures = [];
+const lockWarnings = [];
+let usedLocks = 0;
 for (const lock of locks) {
   const related = motions.filter((m) => m.body.includes(lock.img));
   if (related.length === 0) continue;
-  const missing = related.filter((m) => !m.body.toLowerCase().includes(lock.surface.toLowerCase()));
-  if (missing.length) {
-    lockProblems.push(`${lock.id} 未逐字出现在 ${missing.map((m) => m.id).join('/')}`);
+  usedLocks += 1;
+  const hits = related.filter((m) => m.body.toLowerCase().includes(lock.surface.toLowerCase()));
+  if (hits.length === 0) {
+    lockFailures.push(`${lock.id} 在任何引用 ${lock.img} 的镜头里都没出现`);
+  } else if (hits.length < related.length) {
+    const missed = related.filter((m) => !hits.includes(m));
+    lockWarnings.push(`${lock.id} 覆盖 ${hits.length}/${related.length}，未出现于 ${missed.map((m) => m.id).join('/')}`);
   }
 }
 check(
   'S11 连续性锁面逐字复现',
-  lockProblems.length === 0,
-  locks.length === 0 ? '未发现连续性锁（跳过）' : lockProblems.length ? lockProblems.join(' | ') : `${locks.length} 条锁全部命中`
+  lockFailures.length === 0,
+  usedLocks === 0
+    ? '未发现连续性锁（跳过）'
+    : lockFailures.length
+      ? lockFailures.join(' | ')
+      : lockWarnings.length
+        ? `${usedLocks} 条锁均有命中；部分镜头未复述：${lockWarnings.join(' | ')}`
+        : `${usedLocks} 条锁全部逐镜命中`,
+  lockWarnings.length ? 'warn' : undefined
 );
 
 // ---------- 输出 ----------
-const failed = findings.filter((f) => !f.ok);
+const failed = findings.filter((f) => f.level === 'fail');
+const warned = findings.filter((f) => f.level === 'warn');
 if (jsonMode) {
   console.log(JSON.stringify({ episode: path.basename(episodeDir), totalSeconds: total, shots: shots.length, findings }, null, 2));
 } else {
   console.log(`\n梨花误质检 · ${path.basename(episodeDir)}`);
   console.log(`分镜 ${shots.length} 镜 / MOTION ${motions.length} 条 / 总时长 ${total}s\n`);
   for (const f of findings) {
-    console.log(`${f.ok ? '✓' : '✗'} ${f.id}  ${f.detail}`);
+    const mark = f.level === 'fail' ? '✗' : f.level === 'warn' ? '⚠' : '✓';
+    console.log(`${mark} ${f.id}  ${f.detail}`);
   }
-  console.log(`\n${failed.length === 0 ? '通过：0 项失败' : `未通过：${failed.length} 项失败`}\n`);
+  const summary = failed.length === 0
+    ? `通过：0 项失败${warned.length ? `，${warned.length} 项告警` : ''}`
+    : `未通过：${failed.length} 项失败${warned.length ? `，${warned.length} 项告警` : ''}`;
+  console.log(`\n${summary}\n`);
 }
 
 process.exit(failed.length === 0 ? 0 : 1);

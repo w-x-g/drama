@@ -1,6 +1,9 @@
 # 方案 A：不提交原始会话记录
 .claude/sessions/
 *.jsonl
+# 但制片项目自己的结构化数据必须入库
+!短剧项目/制片/项目开发/*.jsonl
+!短剧项目/制片/创作者决策/*.jsonl
 
 # Claude Code 本机设置（如需要共享，改提交 .claude/settings.json）
 .claude/settings.local.json
