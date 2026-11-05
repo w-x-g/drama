@@ -4,3 +4,10 @@
 
 # Claude Code 本机设置（如需要共享，改提交 .claude/settings.json）
 .claude/settings.local.json
+
+# skill 横向评测实验区（含第三方仓库克隆，不入库）
+_skill-lab/vendor/
+_skill-lab/runs/
+_skill-lab/inputs/
+_skill-lab/references/
+_skill-lab/qc-negative/
