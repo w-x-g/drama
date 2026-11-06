@@ -29,7 +29,7 @@
 
 - 已完成：项目总纲、基础参考；旧 EP01（6 场 / 26 镜）已归档到 `短剧项目/归档/EP01-v1/`
 - 已完成：skill 选型（drama-skills 29/30，take 15/30，storyboard 16/30）
-- 已完成：安装 drama-skills + `lihuawu-qc` 质检层
+- 已完成：安装 drama-skills v0.11.0 + `lihuawu-qc` 质检层（2026-11-06 更新；全局同步自 `npx skills add zenstory-ai/drama-skills -y -g`）
 - 已完成：EP001–EP004 全部前期包（剧本、视觉设定、图片提示词、分镜、H3 视频提示词）
 - 进行中：关键帧生成
 - 下一步：按 `短剧项目/制片/项目开发/投产顺序.md` 先出全剧角色身份板，再出各集关键帧
